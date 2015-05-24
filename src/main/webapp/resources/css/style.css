@@ -1,0 +1,55 @@
+.page {
+    text-align: center;
+}
+.appChat {
+    margin: auto;
+    max-width: 60%;
+    min-width: 350px;
+}
+.sign {
+    text-align: right;
+}
+#sign-name {
+    display: inline;
+    font-size: 15px;
+    width: 10em;
+    outline: none;
+}
+.sign-button {
+    background-color: #C9F1FD;
+    color: #0C59CF;
+    border-color:#0026ff;
+    margin-left: 5px;
+    font-size: 15px;
+}
+.chat {
+    height: 400px;
+    background-color: #F0F8FF;
+    margin-top: 10px;
+    overflow: auto;
+}
+.send-message {
+    margin-top: 5%;
+    height: 60px;
+}
+#message-text {
+    padding: 0;
+    width: 81%;
+    height: 60px;
+    font-size: 15px;
+    resize: none;
+    overflow: auto;
+    outline: none;
+    float: left;
+    background-color: #F0F8FF;
+}
+#send-button {
+    height: 60px;
+    width: 17%;
+    font-size: 15px;
+    background-color: #C9F1FD;
+    color: #0C59CF;
+    border-color:#0026ff;
+    border-style:solid;
+    float: right;
+}
