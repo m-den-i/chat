@@ -15,8 +15,9 @@ var theMessage = function(sender, message,isDeleted, id) {
     };
 };
 
+
 var chatState = {
-    chatUrl: 'http://localhost:999/chat',
+    chatUrl: 'http://localhost:8080/ChatServlet',
     currentUser: null,
     messageList: [],
     token: 'TN11EN',
@@ -92,6 +93,7 @@ function inputChecker(text) {
         alert("Check your input!");
         return false;
     }
+    if (chatState.currentUser == null) alert("You should login!");
     return true;
 }
 
@@ -347,6 +349,7 @@ function ajax(method, url, continueWith, continueWithError) {
 
         continueWithError(errMsg);
     };
+    xhr.send(continueWith);
 }
 
 
