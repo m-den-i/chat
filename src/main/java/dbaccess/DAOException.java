@@ -1,7 +1,5 @@
 package dbaccess;
 
-import java.security.spec.ECFieldF2m;
-
 /**
  * Created by denis on 4.3.15.
  */

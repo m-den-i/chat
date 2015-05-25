@@ -1,3 +1,5 @@
+package messaging;
+
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -5,7 +7,6 @@ import com.sun.net.httpserver.HttpServer;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -14,9 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
 public class Server implements HttpHandler {
     private List<Message> requestsHistory = new ArrayList<Message>();
     private MessageExchange messageExchange = new MessageExchange();
@@ -24,13 +22,13 @@ public class Server implements HttpHandler {
     public static void main(String[] args) {
 
         if (args.length != 1)
-            System.out.println("Usage: java Server port");
+            System.out.println("Usage: java messaging.Server port");
         else {
             try {
-                System.out.println("Server is starting...");
+                System.out.println("messaging.Server is starting...");
                 Integer port = Integer.parseInt(args[0]);
                 HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-                System.out.println("Server started.");
+                System.out.println("messaging.Server started.");
                 String serverHost = InetAddress.getLocalHost().getHostAddress();
                 
                 server.createContext("/chat", new Server());
@@ -110,7 +108,7 @@ public class Server implements HttpHandler {
                 }
             }
             if (!check) {
-                System.err.println("Message with id : " + messageId.getId() + " doesn't exist or was deleted");
+                System.err.println("messaging.Message with id : " + messageId.getId() + " doesn't exist or was deleted");
             }
         } catch (ParseException e) {
             System.err.println("Invalid user message: " + httpExchange.getRequestBody() + " " + e.getMessage());

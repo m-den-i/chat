@@ -93,7 +93,6 @@ function inputChecker(text) {
         alert("Check your input!");
         return false;
     }
-    if (chatState.currentUser == null) alert("You should login!");
     return true;
 }
 
@@ -149,11 +148,13 @@ function onSignOutClick() {
 function onMessageSend(continueWith) {
     var messageText = document.getElementById('message-text');
     if (inputChecker(messageText.value) == true) {
+        if (chatState.currentUser == null) alert("You should login!");
         var message = theMessage(chatState.currentUser, messageText.value.trim().replace(new RegExp("\n", 'g'), "\\n"),false);
         postRequest(chatState.chatUrl, JSON.stringify(message), function () {
             continueWith && continueWith();
         });
         messageText.value = '';
+        addMessage(message)
     }
     else {
         messageText.focus();
@@ -338,10 +339,10 @@ function ajax(method, url, continueWith, continueWithError) {
         continueWith(xhr.responseText);
     };
     xhr.ontimeout = function () {
-        continueWithError('Server timed out!');
+        continueWithError('messaging.Server timed out!');
     };
     xhr.onerror = function () {
-        var errMsg = 'Server connection error!\n' +
+        var errMsg = 'messaging.Server connection error!\n' +
             '\n' +
             'Check if \n' +
             '- server is active\n' +

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+        version="2.0">
+
+    <entity class="dbaccess.MessagesEntity">
+        <table name="messages" schema="" catalog="chat"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false" precision="10"/>
+            </id>
+            <basic name="textdate">
+                <column name="textdate" length="65535"/>
+            </basic>
+            <basic name="userId">
+                <column name="user_id" precision="10" insertable="false" updatable="false"/>
+            </basic>
+            <many-to-one name="usersByUserId" optional="true" target-entity="dbaccess.UsersEntity">
+                <join-column name="user_id" referenced-column-name="id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

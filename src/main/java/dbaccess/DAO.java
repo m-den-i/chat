@@ -1,253 +1,140 @@
 package dbaccess;
 
-import java.sql.*;
-import java.time.LocalDate;
+import messaging.Message;
+
+import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /**
- * Created by denis on 2.3.15.
+ * Created by denis on 29.3.15.
  * Data access object
  */
+
 public class DAO {
-    protected JDBCConnector connector;
-    private Connection conn;
+
+    private static final String ENTITY_MANAGER_FACTORY_NAME =
+            "persistenceUnit2";
+    private EntityManagerFactory factory;
 
     /**
      * DAO constructor
-     * @throws DAOException
      */
-    public DAO() throws DAOException {
-        connector = new JDBCConnector();
-        try {
-            conn = connector.getConnection();
-        } catch (JDBCConnectionException e){
-            throw new DAOException("Can't connect to database!", e);
-        }
+    public DAO() {
+        factory = Persistence.createEntityManagerFactory(ENTITY_MANAGER_FACTORY_NAME);
+
+        //factory = new org.hibernate.ejb.HibernatePersistence().createEntityManagerFactory(ENTITY_MANAGER_FACTORY_NAME, null);
     }
 
-    /**
-     * Closing connection
-     * @throws DAOException
-     */
-    public void closeConnection() throws DAOException{
+    public boolean addUser(int id, String name){
+        EntityManager entityManager = null;
+        EntityTransaction transaction = null;
+        boolean result = false;
         try {
-            connector.close();
-        } catch (JDBCConnectionException e){
-            throw new DAOException("Can't connect to database!", e);
-        }
-    }
-
-    /**
-     * Returns all orders by user ID
-     * @param idUser ID of client
-     * @return
-     * @throws DAOException
-     */
-    public String getAllOrdersByID(int idUser) throws DAOException{
-        String  res = "";
-        try {
-            PreparedStatement statement = conn.prepareStatement("SELECT Order_ID," +
-                    " OrderDate, DeliveryDate FROM `Order` NATURAL JOIN User WHERE User_ID = " + idUser + ";");
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "ID = " + rs.getString(1) + ", Order date = " + rs.getString(2) + ", Delivery date = "
-                        + rs.getString(3)+ "\n";
+            entityManager = factory.createEntityManager();
+            transaction = entityManager.getTransaction();
+            transaction.begin();
+            UsersEntity usersEntity = new UsersEntity();
+            usersEntity.setId(id);
+            usersEntity.setName(name);
+            entityManager.merge(usersEntity);
+            transaction.commit();
+            result = true;
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
-
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
-        }
-        return res;
-    }
-
-    /**
-     * Returns all orders by user login
-     * @param name Login of client
-     * @return
-     * @throws DAOException
-     */
-    public String getAllOrdersByUserLogin(String name) throws DAOException{
-        return getAllOrdersByID(findUserByLogin(name));
-    }
-
-    /**
-     * Returns User ID by his login
-     * @param login Login of client
-     * @return User ID
-     * @throws DAOException
-     */
-    public int findUserByLogin(String login) throws DAOException{
-        try {
-            PreparedStatement statement = conn.prepareStatement("SELECT User_ID" +
-                    " FROM User WHERE Name = \"" + login + "\";");
-            ResultSet rs = statement.executeQuery();
-            return rs.getInt(1);
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
-        }
-    }
-
-    /**
-     * Returns info about all users
-     * @return Info about all users
-     * @throws DAOException
-     */
-    public String findAllUsers()throws DAOException{
-        try {
-            String res = "";
-            PreparedStatement statement = conn.prepareStatement("SELECT User_ID," +
-                    " Name FROM User;");
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "ID = " + rs.getInt(1) + ", Name = " + rs.getString(2) + "\n";
+            e.printStackTrace();
+        } finally {
+            if (entityManager != null && entityManager.isOpen()) {
+                entityManager.close();
             }
-            return res;
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
+            return result;
         }
     }
 
-    /**
-     * Get info about all products
-     * @return Info about available products
-     * @throws DAOException
-     */
-    public String getProducts() throws DAOException{
+    public boolean addMessage(Message message) {
+        EntityManager entityManager = null;
+        EntityTransaction transaction = null;
+        boolean result = false;
         try {
-            String res = "";
-            PreparedStatement statement = conn.prepareStatement("SELECT Product_ID," +
-                    " Name FROM Product;");
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "ID = " + rs.getString(1) + ", Name = " + rs.getString(2) + "\n";
+            entityManager = factory.createEntityManager();
+            transaction = entityManager.getTransaction();
+            transaction.begin();
+            String[] params = new String[1];
+            params[0] = message.getUser();
+            UsersEntity user = (UsersEntity)get("usersByName", params).get(0);
+            MessagesEntity messageEntity = new MessagesEntity();
+            messageEntity.setTextdate(message.getMessageText());
+            messageEntity.setUsersByUserId(user);
+            entityManager.merge(messageEntity);
+            transaction.commit();
+            result = true;
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
-            return res;
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
-        }
-    }
-
-    /**
-     * Returns all orders that should be delivered in
-     * period between "from" and "to"
-     * @param stringDateFrom
-     * @param stringDateTo
-     * @return String with data
-     * @throws DAOException
-     */
-    public String getByDeliveryDate(String stringDateFrom, String stringDateTo) throws DAOException{
-        try {
-            String res = "";
-            Date dateFrom = Date.valueOf(stringDateFrom), dateTo = Date.valueOf(stringDateTo);
-            PreparedStatement statement = conn.prepareStatement("select Order_ID, User_ID, Admin_ID from " +
-                    "`Order` where DeliveryDate between \"" +
-                   dateFrom.toString() + "\" AND \"" + dateTo.toString() + "\";" );
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "Order = " + rs.getString(1) + ", User = " + rs.getString(2) +
-                        ", Admin = " + rs.getString(3) +"\n";
+            e.printStackTrace();
+        } finally {
+            if (entityManager != null && entityManager.isOpen()) {
+                entityManager.close();
             }
-            return res;
-        } catch (Exception e){
-            throw new DAOException("Can't execute query", e);
+            return result;
         }
     }
 
-    /**
-     * Returns all info about overdued orders
-     * @return String with data
-     * @throws DAOException
-     */
-    public String overdueOrders() throws DAOException{
+    public List<Object> get(String type, Object [] params)  {
+        EntityManager entityManager = null;
+        EntityTransaction transaction = null;
+        List<Object> resultArray = null;
         try {
-            String res = "";
-
-            Date now = Date.valueOf(LocalDate.now());
-            PreparedStatement statement = conn.prepareStatement("select Order_ID, User_ID, Admin_ID from " +
-                    "`Order` where DeliveryDate < \"" +
-                    now.toString() + "\" or ApprovingDate > DeliveryDate;" );
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "Order = " + rs.getString(1) + ", User = " + rs.getString(2) +
-                        ", Admin = " + rs.getString(3) +"\n";
+            entityManager = factory.createEntityManager();
+            transaction = entityManager.getTransaction();
+            transaction.begin();
+            Query query = entityManager.createNamedQuery(type);
+            if (params != null)
+                for (int i = 1; i <= params.length; i++){
+                    query.setParameter(i, params[i-1]);
+                }
+            resultArray = (List<Object>)query.getResultList();
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
             }
-            return res;
-        } catch (Exception e){
-            throw new DAOException("Can't execute query", e);
-        }
-    }
-
-    /**
-     * Registering order
-     * @param idUser ID of User whose order
-     * @param idProduct ID of product in order
-     * @param amount Amount of products
-     * @param deliveryDays Days to deliver orders
-     * @return boolean true if successful false otherwise
-     * @throws DAOException
-     */
-    public boolean makeOrder(int idUser, int [] idProduct, int [] amount, int deliveryDays) throws DAOException{
-        try {
-            if (amount.length != idProduct.length) return false;
-            PreparedStatement orderStatement = conn.prepareStatement("select order_id from `Order` " +
-                    "order by order_id desc;");
-            ResultSet rs = orderStatement.executeQuery();
-            rs.next();
-            int orderNum = rs.getInt(1) + 1;
-            String sqlInsert = "insert into `Order` values (?, Now(), (Now() + interval " + deliveryDays + " day), 1, ?, null)";
-            orderStatement = conn.prepareStatement(sqlInsert);
-            orderStatement.setInt(1, orderNum);
-            orderStatement.setInt(2, idUser);
-            orderStatement.executeUpdate();
-            sqlInsert = "insert into `Order_Product` (Order_ID, Product_ID, Amount) value (?, ?, ?)";
-            PreparedStatement orderProductStatement = conn.prepareStatement(sqlInsert);
-            for (int i = 0; i < idProduct.length; i++){
-                orderProductStatement.setInt(1, orderNum);
-                orderProductStatement.setInt(2, idProduct[i]);
-                orderProductStatement.setInt(3, amount[i]);
+            e.printStackTrace();
+        } finally {
+            if (entityManager != null && entityManager.isOpen()) {
+                entityManager.close();
             }
-            orderProductStatement.executeUpdate();
-            return true;
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
+            return resultArray;
         }
     }
 
-    /**
-     * Returns all orders that haven't been approved
-     * @return String with not approved orders
-     * @throws DAOException
-     */
-    public String uncheckedOrders() throws DAOException{
-        try {
-            String res = "";
-            Date now = Date.valueOf(LocalDate.now());
-            PreparedStatement statement = conn.prepareStatement("select Order_ID, User_ID, Admin_ID from " +
-                    "`Order` where ApprovingDate is NULL;" );
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()){
-                res += "Order = " + rs.getString(1) + ", User = " + rs.getString(2) +
-                        ", Admin = " + rs.getString(3) +"\n";
-            }
-            return res;
-        } catch (Exception e){
-            throw new DAOException("Can't execute query", e);
-        }
+    public List<String> getMessagesByUserName(String name){
+        String[] params = new String[1];
+        params[0] = name;
+        UsersEntity user = (UsersEntity)get("usersByName", params).get(0);
+        return getMessagesByUserId(user.getId());
     }
 
-    /**
-     * Approve orders
-     * @param idOrder ID of order to be approved
-     * @throws DAOException
-     */
-    public void fixOrder(int idOrder) throws DAOException{
-        try {
-            PreparedStatement orderStatement = conn.prepareStatement("update `Order` set ApprovingDate = Now() where order_id = ?;");
-            orderStatement.setInt(1, idOrder);
-            orderStatement.executeUpdate();
-        } catch (SQLException e){
-            throw new DAOException("Can't execute query", e);
+    public List<String> getMessagesByUserId(Integer id){
+        List<String> list = new ArrayList<String>();
+        Integer [] params_ = new Integer[1];
+        params_[0] = id;
+        for (Object messagesEntity: get("messagesByUserId", params_)){
+            list.add(((MessagesEntity)messagesEntity).getTextdate());
         }
+        return list;
     }
+
+    public List<String> getMessagesAll(){
+        List<String> list = new ArrayList<String>();
+        for (Object messagesEntity: get("messages",null)){
+            list.add(((MessagesEntity)messagesEntity).getTextdate());
+        }
+        return list;
+    }
+
+
 }
+

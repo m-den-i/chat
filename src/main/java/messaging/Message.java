@@ -1,10 +1,15 @@
-import org.json.simple.*;
-import org.json.simple.parser.*;
+package messaging;
 
-import java.util.ArrayList;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+//import org.json.simple.*;
+//import org.json.simple.parser.*;
+//import org.json.simple.parser.JSONParser;
+
+import java.io.IOException;
 
 public class Message {
-    private final String ID;
+    private String ID;
     private String senderName;
     private String messageText;
     private boolean isDeleted;
@@ -23,12 +28,14 @@ public class Message {
         this.isDeleted = message.isDeleted;
     }
 
-    public Message(String string) throws org.json.simple.parser.ParseException {
-        JSONObject obj = (JSONObject) new JSONParser().parse(string.trim());
-        this.ID = (String)obj.get("id");
-        this.senderName = (String)obj.get("senderName");
-        this.messageText = (String)obj.get("messageText");
-        this.isDeleted = "true".equals((String)obj.get("isDeleted"));
+    public Message(String string) throws IOException
+    {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode actualObj = mapper.readTree(string.trim());
+            this.ID = actualObj.get("id").getTextValue();
+            this.senderName = actualObj.get("senderName").getTextValue();
+            this.messageText = actualObj.get("messageText").getTextValue();
+            this.isDeleted = "true".equals(actualObj.get("isDeleted").getTextValue());
     }
 
     public void delete() {
@@ -67,7 +74,7 @@ public class Message {
 	
 
     public String getReadableView() {
-        StringBuilder sb = new StringBuilder("Message from ");
+        StringBuilder sb = new StringBuilder("messaging.Message from ");
         sb.append(senderName)
         .append(" : ")
         .append(getMessageText());
