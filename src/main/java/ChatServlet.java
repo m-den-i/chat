@@ -1,4 +1,4 @@
-import dbaccess.DAO;
+import db.DAO;
 import messaging.Message;
 
 import javax.servlet.ServletConfig;
@@ -25,7 +25,7 @@ public class ChatServlet extends HttpServlet {
             a += b;
         try {
             Message message = new Message(a);
-            boolean res = db.addMessage(message);
+            //boolean res = db.addMessage(message);
             int s = 0;
         } catch (Exception ex){
             a = "";
@@ -39,7 +39,12 @@ public class ChatServlet extends HttpServlet {
     }
 
     public void init(ServletConfig config) throws ServletException {
-        db = new DAO();
+        int a =0;
+        try {
+            db = new DAO();
+        } catch (Exception ex){
+            throw new ServletException(ex);
+        }
     }
 
 }
